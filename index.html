@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adrian's Daily Declaration</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C; --gold-light: #E8C97A; --gold-pale: #F5E6B8;
+    --deep: #0D0A05; --dark: #1A1408; --mid: #2C2210;
+    --text: #F0E8D0; --muted: #9A8A6A; --danger: #c0392b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--deep); color:var(--text); font-family:'Cormorant Garamond',serif; min-height:100vh; overflow-x:hidden; }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%,rgba(201,168,76,0.15) 0%,transparent 70%),
+                radial-gradient(ellipse 40% 40% at 80% 80%,rgba(201,168,76,0.05) 0%,transparent 60%);
+    pointer-events:none; z-index:0;
+  }
+  .grain { position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:0; opacity:0.5; }
+
+  /* TAB NAV */
+  .tab-nav { position:sticky; top:0; z-index:200; background:rgba(13,10,5,0.97); backdrop-filter:blur(12px); border-bottom:1px solid rgba(201,168,76,0.15); display:flex; justify-content:center; }
+  .tab-btn { font-family:'Cinzel',serif; font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; padding:16px 24px; background:none; border:none; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.25s; white-space:nowrap; }
+  .tab-btn:hover { color:var(--gold-light); }
+  .tab-btn.active { color:var(--gold-light); border-bottom-color:var(--gold); }
+
+  /* PAGES */
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* SHARED */
+  .container { position:relative; z-index:1; max-width:860px; margin:0 auto; padding:40px 24px 80px; }
+  .divider { display:flex; align-items:center; gap:16px; margin:32px 0; }
+  .divider::before,.divider::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+  .divider span { color:var(--gold); font-size:1.2rem; }
+  header { text-align:center; padding:48px 0 36px; }
+  .cross-icon { display:inline-block; font-size:28px; color:var(--gold); margin-bottom:16px; letter-spacing:6px; animation:glow 3s ease-in-out infinite; }
+  @keyframes glow { 0%,100%{text-shadow:0 0 8px rgba(201,168,76,0.4)} 50%{text-shadow:0 0 24px rgba(201,168,76,0.9),0 0 48px rgba(201,168,76,0.3)} }
+  h1 { font-family:'Cinzel',serif; font-size:clamp(1.6rem,3.5vw,2.6rem); font-weight:600; color:var(--gold-light); letter-spacing:0.1em; line-height:1.2; margin-bottom:10px; }
+  .subtitle { font-style:italic; font-size:1.1rem; color:var(--muted); letter-spacing:0.05em; }
+
+  /* TIMER */
+  .timer-card { background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03)); border:1px solid rgba(201,168,76,0.22); border-radius:16px; padding:24px 28px; text-align:center; margin-bottom:36px; }
+  .timer-label { font-family:'Inter',sans-serif; font-size:0.72rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+  .timer-display { font-family:'Cinzel',serif; font-size:3.2rem; color:var(--gold-light); letter-spacing:0.05em; line-height:1; margin-bottom:14px; }
+  .timer-display.pulse { animation:timerPulse 1s ease-in-out infinite; }
+  @keyframes timerPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .progress-bar { width:100%; height:3px; background:rgba(201,168,76,0.12); border-radius:2px; margin-top:12px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold-light)); border-radius:2px; width:0%; transition:width 1s linear; }
+  .timer-buttons { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px; }
+
+  /* BUTTONS */
+  .btn { font-family:'Cinzel',serif; font-size:0.76rem; letter-spacing:0.14em; padding:9px 22px; border-radius:40px; border:1px solid var(--gold); background:transparent; color:var(--gold); cursor:pointer; transition:all 0.25s; }
+  .btn:hover { background:var(--gold); color:var(--deep); }
+  .btn.primary { background:var(--gold); color:var(--deep); font-weight:600; }
+  .btn.primary:hover { background:var(--gold-light); border-color:var(--gold-light); }
+  .btn.danger { border-color:var(--danger); color:var(--danger); }
+  .btn.danger:hover { background:var(--danger); color:#fff; }
+  .btn.sm { font-size:0.68rem; padding:6px 14px; }
+
+  /* SECTION CARDS */
+  .section-card { background:rgba(255,255,255,0.02); border:1px solid rgba(201,168,76,0.12); border-radius:12px; padding:26px 30px; margin-bottom:24px; transition:border-color 0.3s,background 0.3s; }
+  .section-card:hover { border-color:rgba(201,168,76,0.28); background:rgba(201,168,76,0.025); }
+  .section-header { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .section-icon { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,rgba(201,168,76,0.18),rgba(201,168,76,0.04)); border:1px solid rgba(201,168,76,0.25); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .section-title-text { font-family:'Cinzel',serif; font-size:0.95rem; letter-spacing:0.1em; color:var(--gold-light); font-weight:600; }
+  .affirmation-text { font-size:clamp(1rem,2vw,1.18rem); line-height:1.85; color:var(--text); font-weight:300; }
+  .affirmation-text strong { color:var(--gold-light); font-weight:600; }
+  .affirmation-text em { color:var(--gold-pale); font-style:italic; }
+  .scripture { margin-top:16px; padding:12px 18px; border-left:2px solid var(--gold); background:rgba(201,168,76,0.05); border-radius:0 8px 8px 0; font-style:italic; color:var(--gold-pale); font-size:0.92rem; line-height:1.65; }
+  .scripture cite { display:block; font-style:normal; font-family:'Inter',sans-serif; font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold); margin-top:5px; }
+
+  /* FULL SCRIPT */
+  .full-text-box { background:linear-gradient(135deg,rgba(13,10,5,0.9),rgba(26,20,8,0.9)); border:1px solid rgba(201,168,76,0.2); border-radius:16px; padding:36px; margin:40px 0; position:relative; }
+  .full-text-box::before { content:'❝'; position:absolute; top:-14px; left:28px; font-size:2.8rem; color:var(--gold); line-height:1; opacity:0.5; }
+  .full-text-box h2 { font-family:'Cinzel',serif; font-size:0.95rem; letter-spacing:0.18em; color:var(--gold); margin-bottom:20px; text-transform:uppercase; }
+  .full-script { font-size:1.08rem; line-height:2; color:var(--text); }
+  .full-script .highlight { color:var(--gold-light); font-weight:600; }
+  .copy-btn { margin-top:20px; display:inline-flex; align-items:center; gap:8px; font-family:'Inter',sans-serif; font-size:0.76rem; letter-spacing:0.14em; }
+  .copied-msg { display:none; color:var(--gold-light); font-size:0.78rem; }
+
+  /* SCIENCE */
+  .science-box { border:1px solid rgba(201,168,76,0.13); border-radius:12px; padding:26px; margin:36px 0; background:rgba(255,255,255,0.01); }
+  .science-box h2 { font-family:'Cinzel',serif; font-size:0.85rem; letter-spacing:0.18em; color:var(--gold); text-transform:uppercase; margin-bottom:14px; }
+  .science-box ul { list-style:none; display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:9px; }
+  .science-box li { font-family:'Inter',sans-serif; font-size:0.78rem; color:var(--muted); padding:7px 11px; border-left:2px solid rgba(201,168,76,0.28); line-height:1.5; }
+  .science-box li strong { display:block; color:var(--text); margin-bottom:1px; font-size:0.8rem; }
+
+  /* ── AUDIO LIBRARY ── */
+  .page-hero { text-align:center; padding:36px 0 24px; }
+  .page-hero .hero-icon { font-size:2rem; margin-bottom:10px; }
+  .page-hero h2 { font-family:'Cinzel',serif; font-size:clamp(1.4rem,3vw,2rem); color:var(--gold-light); letter-spacing:0.1em; margin-bottom:8px; }
+  .page-hero p { font-style:italic; color:var(--muted); font-size:1rem; }
+
+  .drop-zone { border:2px dashed rgba(201,168,76,0.32); border-radius:16px; padding:36px 24px; text-align:center; cursor:pointer; transition:all 0.3s; margin-bottom:28px; background:rgba(201,168,76,0.02); }
+  .drop-zone:hover,.drop-zone.drag-over { border-color:var(--gold); background:rgba(201,168,76,0.07); }
+  .drop-zone .drop-icon { font-size:2.2rem; margin-bottom:8px; }
+  .drop-zone h3 { font-family:'Cinzel',serif; font-size:0.95rem; color:var(--gold-light); letter-spacing:0.08em; margin-bottom:6px; }
+  .drop-zone p { font-family:'Inter',sans-serif; font-size:0.78rem; color:var(--muted); }
+  .drop-zone input[type=file] { display:none; }
+
+  .audio-list { display:flex; flex-direction:column; gap:12px; }
+  .audio-track { background:rgba(255,255,255,0.025); border:1px solid rgba(201,168,76,0.14); border-radius:12px; padding:16px 20px; transition:border-color 0.25s,background 0.25s; }
+  .audio-track:hover { border-color:rgba(201,168,76,0.3); background:rgba(201,168,76,0.035); }
+  .audio-track.playing { border-color:var(--gold); background:rgba(201,168,76,0.07); box-shadow:0 0 20px rgba(201,168,76,0.1); }
+  .track-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .track-play-btn { width:40px; height:40px; border-radius:50%; background:var(--gold); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.95rem; color:var(--deep); flex-shrink:0; transition:all 0.2s; }
+  .track-play-btn:hover { background:var(--gold-light); transform:scale(1.06); }
+  .track-info { flex:1; min-width:0; }
+  .track-name { font-family:'Cinzel',serif; font-size:0.9rem; color:var(--gold-light); letter-spacing:0.06em; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .track-name-input { font-family:'Cinzel',serif; font-size:0.9rem; color:var(--gold-light); background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.4); border-radius:6px; padding:3px 9px; width:100%; letter-spacing:0.06em; outline:none; }
+  .track-name-input:focus { border-color:var(--gold); }
+  .track-meta { font-family:'Inter',sans-serif; font-size:0.7rem; color:var(--muted); }
+  .track-actions { display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap; }
+  .audio-progress { -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:2px; cursor:pointer; background:rgba(201,168,76,0.15); outline:none; margin-bottom:3px; }
+  .audio-progress::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; border-radius:50%; background:var(--gold); cursor:pointer; }
+  .audio-progress::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:var(--gold); border:none; cursor:pointer; }
+  .time-labels { display:flex; justify-content:space-between; font-family:'Inter',sans-serif; font-size:0.67rem; color:var(--muted); }
+  .empty-state { text-align:center; padding:44px 24px; border:1px dashed rgba(201,168,76,0.12); border-radius:12px; }
+  .empty-state .e-icon { font-size:2.5rem; margin-bottom:12px; opacity:0.4; }
+  .empty-state p { font-family:'Inter',sans-serif; font-size:0.83rem; color:var(--muted); line-height:1.75; }
+
+  /* ── SCRIPTS MANAGER ── */
+  .scripts-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+  .scripts-toolbar h2 { font-family:'Cinzel',serif; font-size:1.05rem; color:var(--gold-light); letter-spacing:0.1em; flex:1; }
+
+  .add-script-form { background:rgba(201,168,76,0.04); border:1px solid rgba(201,168,76,0.18); border-radius:12px; padding:22px; margin-bottom:24px; display:none; }
+  .add-script-form.open { display:block; }
+  .add-script-form h3 { font-family:'Cinzel',serif; font-size:0.88rem; letter-spacing:0.12em; color:var(--gold); margin-bottom:14px; text-transform:uppercase; }
+  .form-field { margin-bottom:12px; }
+  .form-field label { font-family:'Inter',sans-serif; font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:5px; }
+  .form-input { width:100%; background:rgba(0,0,0,0.25); border:1px solid rgba(201,168,76,0.2); border-radius:8px; padding:9px 13px; font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--text); outline:none; transition:border-color 0.2s; }
+  .form-input:focus { border-color:rgba(201,168,76,0.5); }
+  textarea.form-input { min-height:130px; resize:vertical; line-height:1.7; }
+
+  .script-card { background:rgba(255,255,255,0.02); border:1px solid rgba(201,168,76,0.14); border-radius:12px; margin-bottom:16px; overflow:hidden; transition:border-color 0.25s; }
+  .script-card:hover { border-color:rgba(201,168,76,0.28); }
+  .script-card-header { display:flex; align-items:center; gap:12px; padding:15px 18px; cursor:pointer; border-bottom:1px solid rgba(201,168,76,0.07); background:rgba(201,168,76,0.025); }
+  .script-card-header:hover { background:rgba(201,168,76,0.055); }
+  .script-expand-icon { color:var(--gold); font-size:0.75rem; transition:transform 0.25s; flex-shrink:0; }
+  .script-card.open .script-expand-icon { transform:rotate(90deg); }
+  .script-card-title { font-family:'Cinzel',serif; font-size:0.92rem; color:var(--gold-light); letter-spacing:0.07em; flex:1; min-width:0; }
+  .script-title-input { font-family:'Cinzel',serif; font-size:0.92rem; color:var(--gold-light); background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.35); border-radius:6px; padding:3px 9px; letter-spacing:0.07em; outline:none; width:100%; }
+  .script-title-input:focus { border-color:var(--gold); }
+  .script-card-actions { display:flex; gap:7px; flex-shrink:0; }
+  .script-card-body { padding:18px; display:none; }
+  .script-card.open .script-card-body { display:block; }
+  .script-textarea { width:100%; min-height:150px; background:rgba(0,0,0,0.2); border:1px solid rgba(201,168,76,0.15); border-radius:8px; padding:12px 15px; resize:vertical; font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--text); line-height:1.75; outline:none; transition:border-color 0.2s; }
+  .script-textarea:focus { border-color:rgba(201,168,76,0.4); }
+  .script-card-footer { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; align-items:center; }
+  .script-saved-msg { font-family:'Inter',sans-serif; font-size:0.73rem; color:var(--gold); display:none; }
+  .script-date { font-family:'Inter',sans-serif; font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+
+  footer { text-align:center; padding:40px 0 20px; font-family:'Inter',sans-serif; font-size:0.7rem; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; }
+  .nav-dots { position:fixed; right:20px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:9px; z-index:100; }
+  .nav-dot { width:6px; height:6px; border-radius:50%; background:rgba(201,168,76,0.22); cursor:pointer; transition:all 0.3s; }
+  .nav-dot.active { background:var(--gold); transform:scale(1.5); }
+
+  @media(max-width:600px){
+    .tab-btn{font-size:0.6rem;padding:12px 12px;letter-spacing:0.09em;}
+    .nav-dots{display:none;}
+    .full-text-box,.section-card{padding:18px;}
+    .track-actions .btn.sm{font-size:0.6rem;padding:5px 10px;}
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('declarations',this)">✝ Declarations</button>
+  <button class="tab-btn" onclick="showTab('audio',this)">🎵 Audio Library</button>
+  <button class="tab-btn" onclick="showTab('scripts',this)">📋 My Scripts</button>
+</nav>
+
+
+<!-- ═══════════════════════════
+     PAGE 1 — DECLARATIONS
+════════════════════════════ -->
+<div id="tab-declarations" class="page active">
+  <nav class="nav-dots" id="navDots">
+    <div class="nav-dot active" data-target="faith"></div>
+    <div class="nav-dot" data-target="will"></div>
+    <div class="nav-dot" data-target="health"></div>
+    <div class="nav-dot" data-target="knowledge"></div>
+    <div class="nav-dot" data-target="happiness"></div>
+    <div class="nav-dot" data-target="leadership"></div>
+    <div class="nav-dot" data-target="motivation"></div>
+    <div class="nav-dot" data-target="finances"></div>
+    <div class="nav-dot" data-target="fulltext"></div>
+  </nav>
+
+  <div class="container">
+    <header>
+      <div class="cross-icon">✝</div>
+      <h1>Adrian's Daily Declaration</h1>
+      <p class="subtitle">I am Adrian. I am anointed. I am unstoppable in Christ.</p>
+    </header>
+
+    <div class="timer-card">
+      <div class="timer-label">Daily Reading Timer</div>
+      <div class="timer-display" id="timerDisplay">3:00</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="timer-buttons">
+        <button class="btn primary" onclick="startTimer()">▶ Begin Declaration</button>
+        <button class="btn" onclick="resetTimer()">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="divider"><span>✦</span></div>
+
+    <div id="faith" class="section-card">
+      <div class="section-header"><div class="section-icon">✝</div><div class="section-title-text">Faith in Christ</div></div>
+      <div class="affirmation-text">I, <strong>Adrian, am a child of God</strong> — redeemed by the blood of Jesus Christ and covered by His grace. My faith is not wishful thinking — it is <em>the bedrock of everything I am and everything I do</em>. Today I choose to trust God's plan for my life completely. I surrender my fears, my doubts, and my burdens to Him. <strong>No non-God force — no enemy, no spiritual attack, no scheme of darkness — will prevail against me or my family.</strong> I walk in the Spirit, not in the flesh. The same power that raised Christ from the dead lives inside Adrian. God is for me, and that settles it.</div>
+      <div class="scripture">"No weapon formed against you shall prosper… This is the heritage of the servants of the Lord."<cite>— Isaiah 54:17</cite></div>
+    </div>
+
+    <div id="will" class="section-card">
+      <div class="section-header"><div class="section-icon">⚔</div><div class="section-title-text">Iron Will</div></div>
+      <div class="affirmation-text"><strong>Adrian's will is iron-forged.</strong> Every temptation I resist makes me stronger. Every time I choose discipline over comfort, I become more of the man God created me to be. I do not negotiate with weakness. <strong>I face discomfort head-on and I do not run.</strong> No test will defeat me — not a job interview, not an exam, not a life trial, not a spiritual battle. I have been prepared for every season because my God is never caught off guard. <em>I am refined like gold in fire</em> — and I come out purer every time.</div>
+      <div class="scripture">"Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go."<cite>— Joshua 1:9</cite></div>
+    </div>
+
+    <div id="health" class="section-card">
+      <div class="section-header"><div class="section-icon">🔥</div><div class="section-title-text">Body &amp; Health</div></div>
+      <div class="affirmation-text"><strong>Adrian's body is a temple of the Holy Spirit</strong> and I treat it with intention, discipline, and respect. I fuel it with what builds life and I move it to grow stronger. I look and feel my best — not for vanity, but because I carry God's presence and I represent Him well. <em>I am a man who takes care of himself.</em> My energy is strong, my appearance is sharp, and my health is a daily act of gratitude to the God who crafted me. <strong>I show up looking like the man I am becoming.</strong></div>
+      <div class="scripture">"Do you not know that your bodies are temples of the Holy Spirit? … Therefore honor God with your bodies."<cite>— 1 Corinthians 6:19–20</cite></div>
+    </div>
+
+    <div id="knowledge" class="section-card">
+      <div class="section-header"><div class="section-icon">📖</div><div class="section-title-text">Knowledge &amp; Sharpness</div></div>
+      <div class="affirmation-text"><strong>I, Adrian, am the sharpest, most prepared man in any room I walk into.</strong> My mind is a weapon of clarity, trained daily by God's Word, deep reading, and disciplined thinking. When I enter a conversation — with leaders, executives, scholars, or anyone — I hold my own. I ask powerful questions. I give intelligent answers. <em>I am never the least informed person at the table.</em> No quiz, no interview, no test will catch me off guard — because Adrian prepares, studies, and grows every single day. <strong>Wisdom flows through me and people notice.</strong></div>
+      <div class="scripture">"For the Lord gives wisdom; from His mouth come knowledge and understanding."<cite>— Proverbs 2:6</cite></div>
+    </div>
+
+    <div id="happiness" class="section-card">
+      <div class="section-header"><div class="section-icon">☀</div><div class="section-title-text">Joy &amp; Happiness</div></div>
+      <div class="affirmation-text"><strong>Adrian's joy runs deeper than his circumstances.</strong> I do not depend on the world to make me happy — my joy is sourced from God and it cannot be stolen. I choose gratitude this morning. I look for God's fingerprints in ordinary moments. I laugh freely, love generously, and walk in <em>a peace that the world cannot give and cannot take away</em>. I am not weighed down by yesterday or anxious about tomorrow. <strong>Today is a gift, and Adrian receives it fully and with thanksgiving.</strong></div>
+      <div class="scripture">"Rejoice in the Lord always. I will say it again: Rejoice!"<cite>— Philippians 4:4</cite></div>
+    </div>
+
+    <div id="leadership" class="section-card">
+      <div class="section-header"><div class="section-icon">👑</div><div class="section-title-text">Leadership &amp; Communication</div></div>
+      <div class="affirmation-text"><strong>Adrian walks into any room and belongs there.</strong> I am not intimidated by titles, wealth, or status — I am inspired and sharpened by them. I speak with clarity, conviction, and grace. I listen deeply and respond wisely. <em>I know how to hold a conversation with leaders, CEOs, pastors, and powerhouses</em> — because I have prepared myself and God has anointed my mouth. I ask sharp questions. I add real value. I am memorable, credible, and respected. <strong>God opens doors for men like Adrian — doors that no man can shut.</strong></div>
+      <div class="scripture">"Let your speech always be gracious, seasoned with salt, so that you may know how you ought to answer each person."<cite>— Colossians 4:6</cite></div>
+    </div>
+
+    <div id="motivation" class="section-card">
+      <div class="section-header"><div class="section-icon">⚡</div><div class="section-title-text">Daily Motivation &amp; Action</div></div>
+      <div class="affirmation-text"><strong>Adrian does not wait for the perfect moment — he creates it.</strong> I start before I feel ready. I do the hard things first. I do not procrastinate what matters. Every day I move the needle forward — on my career, my faith, my family, and my future. <em>I am consistent when consistency is hard.</em> I show up for my calling even on the days I don't feel like it — because feelings are temporary but <strong>God's purpose for Adrian is permanent</strong>. My future self is watching, and I will not let him down. I will not waste the man God made me to be.</div>
+      <div class="scripture">"Whatever you do, work at it with all your heart, as working for the Lord, not for human masters."<cite>— Colossians 3:23</cite></div>
+    </div>
+
+    <div id="finances" class="section-card">
+      <div class="section-header"><div class="section-icon">💰</div><div class="section-title-text">Career, Finances &amp; Provision</div></div>
+      <div class="affirmation-text"><strong>I, Adrian, will find and secure a great job</strong> — one that matches my gifts, rewards my effort, and positions me for greatness. I am financially set. I am not a man who struggles in lack — I am a man whom God prospers. <em>Wealth and provision flow toward Adrian</em> because I am diligent, prepared, and planted in righteous purpose. I manage money with wisdom. I build. I save. I give. <strong>No door of opportunity is permanently closed to me</strong> — God opens what no man can shut and I walk through with boldness and confidence.</div>
+      <div class="scripture">"And my God will meet all your needs according to the riches of his glory in Christ Jesus."<cite>— Philippians 4:19</cite></div>
+    </div>
+
+    <div class="divider"><span>✦</span></div>
+
+    <div id="fulltext" class="full-text-box">
+      <h2>✦ Adrian's Complete Declaration — Read This Aloud</h2>
+      <div class="full-script">
+        <p><span class="highlight">I am Adrian — a child of God.</span> Redeemed, loved, and chosen by the Creator of the universe. My faith is the foundation of everything. Today I choose to trust God completely, and I declare that no non-God force — no enemy, no darkness, no attack — will prevail against me or my family.</p><br>
+        <p>My will is iron. I, Adrian, face every test, every trial, every challenge with unbreakable courage. No test will defeat me. I am refined by fire and I come out stronger every time.</p><br>
+        <p>My body is a temple — strong, sharp, and full of energy. I take care of myself with discipline. I show up looking and feeling like the man I was made to be.</p><br>
+        <p>I am the smartest, sharpest person in any conversation I enter. My mind is trained, my words are powerful, and God has anointed my mouth to speak with wisdom and authority. No quiz, no interview, no test will catch me off guard.</p><br>
+        <p>My joy is deep and it cannot be stolen. I choose gratitude. I choose peace. I walk in the happiness that is my inheritance as a son of God.</p><br>
+        <p>I, Adrian, can speak to any leader, any executive, any powerful person — and I hold my own. I am credible, confident, and I add real value everywhere I go.</p><br>
+        <p>I act today. I do not procrastinate. I show up every day and move my life forward because God's purpose for Adrian is too important to delay.</p><br>
+        <p><span class="highlight">I will find a great job. I will be financially set.</span> God prospers the work of my hands. Provision flows toward Adrian because I am diligent, prepared, and planted in His purpose.</p><br>
+        <p>I am grateful. I am grounded in Christ. I am ready for this day. <span class="highlight">Adrian wins — because God is with him.</span></p>
+      </div>
+      <button class="btn copy-btn" onclick="copyMainScript()">⎘ Copy Script <span class="copied-msg" id="copiedMsg">Copied!</span></button>
+    </div>
+
+    <div class="science-box">
+      <h2>Why This Works — Science &amp; Theology</h2>
+      <ul>
+        <li><strong>Neuroplasticity</strong> Repeated self-talk rewires neural pathways over 21–66 days</li>
+        <li><strong>Identity Shift</strong> "I am" programs the subconscious as present reality</li>
+        <li><strong>Proverbs 23:7</strong> "As a man thinks in his heart, so is he"</li>
+        <li><strong>Morning Anchoring</strong> Done before 9am sets your emotional tone all day</li>
+        <li><strong>Spoken &gt; Silent</strong> Voice activates auditory cortex, doubling encoding</li>
+        <li><strong>Emotion + Words</strong> Feeling while speaking increases impact 40%+</li>
+        <li><strong>Scripture Fusion</strong> Faith activates what willpower alone cannot</li>
+        <li><strong>3-Minute Sweet Spot</strong> Deep enough to reprogram, short enough to stay consistent</li>
+      </ul>
+    </div>
+
+    <footer>Adrian — say it daily. Mean it deeply. Watch God move. &nbsp;✦&nbsp; Isaiah 54:17</footer>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     PAGE 2 — AUDIO LIBRARY
+════════════════════════════ -->
+<div id="tab-audio" class="page">
+  <div class="container">
+    <div class="page-hero">
+      <div class="hero-icon">🎵</div>
+      <h2>Audio Library</h2>
+      <p>Upload your recorded declarations — click any track to play</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('audioFileInput').click()">
+      <div class="drop-icon">🎙</div>
+      <h3>Drop Audio Files Here</h3>
+      <p>or click to browse &nbsp;·&nbsp; supports MP3, M4A, WAV, OGG, AAC</p>
+      <input type="file" id="audioFileInput" multiple accept="audio/*" onchange="handleAudioFiles(this.files)">
+    </div>
+
+    <div id="audioList" class="audio-list"></div>
+    <div id="audioEmpty" class="empty-state">
+      <div class="e-icon">🎧</div>
+      <p>No audio tracks yet.<br>Upload your first recording above to get started.<br><br>
+      <strong style="color:var(--text)">Quick start:</strong> Record in Voice Memos or generate a voice at <strong style="color:var(--gold)">ElevenLabs.io</strong>,<br>then drag &amp; drop the file here. Play it every morning.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     PAGE 3 — SCRIPTS MANAGER
+════════════════════════════ -->
+<div id="tab-scripts" class="page">
+  <div class="container" style="padding-top:36px">
+    <div class="scripts-toolbar">
+      <h2>📋 My Scripts</h2>
+      <button class="btn primary" onclick="toggleAddForm()">+ New Script</button>
+    </div>
+
+    <div class="add-script-form" id="addScriptForm">
+      <h3>✦ Add New Script</h3>
+      <div class="form-field">
+        <label>Script Name</label>
+        <input type="text" class="form-input" id="newScriptName" placeholder="e.g. Evening Prayer, Job Interview Prep, Gratitude…">
+      </div>
+      <div class="form-field">
+        <label>Script Text</label>
+        <textarea class="form-input" id="newScriptText" placeholder="Write your declaration here…"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn primary" onclick="saveNewScript()">✦ Save Script</button>
+        <button class="btn" onclick="toggleAddForm()">Cancel</button>
+      </div>
+    </div>
+
+    <div id="scriptList"></div>
+    <div id="scriptsEmpty" class="empty-state" style="display:none">
+      <div class="e-icon">📋</div>
+      <p>No scripts yet. Click <strong style="color:var(--gold)">+ New Script</strong> to add one.<br><br>
+      Use this to store different declarations — evening prayers, interview prep, gratitude lists, weekend versions — whatever you want to speak over yourself.</p>
+    </div>
+
+    <footer>Every word you speak over yourself matters. &nbsp;✦&nbsp; Proverbs 18:21</footer>
+  </div>
+</div>
+
+
+<script>
+// ─── TAB SYSTEM ───────────────────────
+function showTab(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('navDots').style.display = (name === 'declarations') ? 'flex' : 'none';
+  if (name === 'audio') renderAudioList();
+  if (name === 'scripts') renderScriptList();
+}
+
+// ─── TIMER ────────────────────────────
+let timerInterval=null, totalSec=180, remaining=180, running=false;
+function updateDisplay(){
+  const m=Math.floor(remaining/60),s=remaining%60;
+  document.getElementById('timerDisplay').textContent=`${m}:${s.toString().padStart(2,'0')}`;
+  document.getElementById('progressFill').style.width=((totalSec-remaining)/totalSec*100)+'%';
+}
+function startTimer(){
+  if(running)return; running=true;
+  document.getElementById('timerDisplay').classList.add('pulse');
+  timerInterval=setInterval(()=>{
+    remaining--; updateDisplay();
+    if(remaining<=0){
+      clearInterval(timerInterval); running=false;
+      document.getElementById('timerDisplay').classList.remove('pulse');
+      document.getElementById('timerDisplay').textContent='✝ Done';
+      document.getElementById('progressFill').style.width='100%';
+    }
+  },1000);
+}
+function resetTimer(){
+  clearInterval(timerInterval); running=false; remaining=totalSec;
+  document.getElementById('timerDisplay').classList.remove('pulse');
+  updateDisplay(); document.getElementById('progressFill').style.width='0%';
+}
+
+// ─── COPY MAIN SCRIPT ─────────────────
+const MAIN_SCRIPT = `I am Adrian — a child of God. Redeemed, loved, and chosen by the Creator of the universe. My faith is the foundation of everything. Today I choose to trust God completely, and I declare that no non-God force — no enemy, no darkness, no attack — will prevail against me or my family.
+
+My will is iron. I, Adrian, face every test, every trial, every challenge with unbreakable courage. No test will defeat me. I am refined by fire and I come out stronger every time.
+
+My body is a temple — strong, sharp, and full of energy. I take care of myself with discipline. I show up looking and feeling like the man I was made to be.
+
+I am the smartest, sharpest person in any conversation I enter. My mind is trained, my words are powerful, and God has anointed my mouth to speak with wisdom and authority. No quiz, no interview, no test will catch me off guard.
+
+My joy is deep and it cannot be stolen. I choose gratitude. I choose peace. I walk in the happiness that is my inheritance as a son of God.
+
+I, Adrian, can speak to any leader, any executive, any powerful person — and I hold my own. I am credible, confident, and I add real value everywhere I go.
+
+I act today. I do not procrastinate. I show up every day and move my life forward because God's purpose for Adrian is too important to delay.
+
+I will find a great job. I will be financially set. God prospers the work of my hands. Provision flows toward Adrian because I am diligent, prepared, and planted in His purpose.
+
+I am grateful. I am grounded in Christ. I am ready for this day. Adrian wins — because God is with him.`;
+
+function copyMainScript(){
+  navigator.clipboard.writeText(MAIN_SCRIPT).then(()=>{
+    const m=document.getElementById('copiedMsg');
+    m.style.display='inline'; setTimeout(()=>m.style.display='none',2500);
+  });
+}
+
+// ─── NAV DOTS ─────────────────────────
+const NAV_SECTIONS=['faith','will','health','knowledge','happiness','leadership','motivation','finances','fulltext'];
+const navDotEls=document.querySelectorAll('.nav-dot');
+window.addEventListener('scroll',()=>{
+  let cur=0;
+  NAV_SECTIONS.forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el && el.getBoundingClientRect().top < window.innerHeight*0.6) cur=i;
+  });
+  navDotEls.forEach((d,i)=>d.classList.toggle('active',i===cur));
+});
+navDotEls.forEach((dot,i)=>{
+  dot.addEventListener('click',()=>{
+    document.getElementById(NAV_SECTIONS[i]).scrollIntoView({behavior:'smooth',block:'center'});
+  });
+});
+
+// ─── AUDIO LIBRARY ────────────────────
+let audioTracks = [];
+try { audioTracks = JSON.parse(localStorage.getItem('adrianAudioTracks')||'[]'); } catch(e){}
+
+let currentAudio=null, currentTrackId=null;
+
+// Drag & drop
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');handleAudioFiles(e.dataTransfer.files);});
+
+function handleAudioFiles(files){
+  Array.from(files).forEach(file=>{
+    if(!file.type.startsWith('audio/'))return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      audioTracks.push({
+        id: Date.now()+Math.random(),
+        name: file.name.replace(/\.[^/.]+$/,''),
+        dataUrl: e.target.result,
+        type: file.type,
+        size: file.size,
+        addedAt: new Date().toLocaleDateString()
+      });
+      saveAudioTracks(); renderAudioList();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveAudioTracks(){
+  try{ localStorage.setItem('adrianAudioTracks',JSON.stringify(audioTracks)); }catch(e){}
+}
+
+function fmtBytes(b){ return b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB'; }
+function fmtTime(s){ if(isNaN(s))return'0:00'; return`${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; }
+
+function renderAudioList(){
+  const list=document.getElementById('audioList');
+  const empty=document.getElementById('audioEmpty');
+  if(!audioTracks.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=audioTracks.map(t=>`
+    <div class="audio-track" id="atrack-${t.id}">
+      <div class="track-top">
+        <button class="track-play-btn" id="aplaybtn-${t.id}" onclick="togglePlay('${t.id}')">▶</button>
+        <div class="track-info">
+          <div class="track-name" id="aname-${t.id}">${esc(t.name)}</div>
+          <div class="track-meta">Added ${t.addedAt} &nbsp;·&nbsp; ${fmtBytes(t.size)}</div>
+        </div>
+        <div class="track-actions">
+          <button class="btn sm" onclick="renameTrack('${t.id}')">✎ Rename</button>
+          <button class="btn sm danger" onclick="deleteTrack('${t.id}')">✕ Remove</button>
+        </div>
+      </div>
+      <input type="range" class="audio-progress" id="aseek-${t.id}" value="0" min="0" max="100" step="0.1" oninput="seekAudio('${t.id}',this.value)">
+      <div class="time-labels"><span id="acur-${t.id}">0:00</span><span id="adur-${t.id}">--:--</span></div>
+    </div>
+  `).join('');
+}
+
+function togglePlay(id){
+  const track=audioTracks.find(t=>String(t.id)===String(id));
+  if(!track)return;
+
+  if(currentAudio && String(currentTrackId)!==String(id)){
+    currentAudio.pause();
+    const ob=document.getElementById('aplaybtn-'+currentTrackId);
+    const oc=document.getElementById('atrack-'+currentTrackId);
+    if(ob){ob.textContent='▶';ob.classList.remove('playing');}
+    if(oc)oc.classList.remove('playing');
+    currentAudio=null;
+  }
+
+  const btn=document.getElementById('aplaybtn-'+id);
+  const card=document.getElementById('atrack-'+id);
+
+  if(currentAudio && String(currentTrackId)===String(id)){
+    if(currentAudio.paused){currentAudio.play();btn.textContent='⏸';btn.classList.add('playing');card.classList.add('playing');}
+    else{currentAudio.pause();btn.textContent='▶';btn.classList.remove('playing');card.classList.remove('playing');}
+    return;
+  }
+
+  const audio=new Audio(track.dataUrl);
+  currentAudio=audio; currentTrackId=id;
+
+  audio.addEventListener('loadedmetadata',()=>{
+    const d=document.getElementById('adur-'+id); if(d)d.textContent=fmtTime(audio.duration);
+  });
+  audio.addEventListener('timeupdate',()=>{
+    const sk=document.getElementById('aseek-'+id);
+    const cu=document.getElementById('acur-'+id);
+    if(sk&&audio.duration)sk.value=(audio.currentTime/audio.duration)*100;
+    if(cu)cu.textContent=fmtTime(audio.currentTime);
+  });
+  audio.addEventListener('ended',()=>{
+    btn.textContent='▶';btn.classList.remove('playing');card.classList.remove('playing');
+    const sk=document.getElementById('aseek-'+id); if(sk)sk.value=0;
+    const cu=document.getElementById('acur-'+id); if(cu)cu.textContent='0:00';
+    currentAudio=null;currentTrackId=null;
+  });
+  audio.play();
+  btn.textContent='⏸';btn.classList.add('playing');card.classList.add('playing');
+}
+
+function seekAudio(id,val){
+  if(currentAudio && String(currentTrackId)===String(id) && currentAudio.duration)
+    currentAudio.currentTime=(val/100)*currentAudio.duration;
+}
+
+function renameTrack(id){
+  const t=audioTracks.find(x=>String(x.id)===String(id));
+  const nameEl=document.getElementById('aname-'+id);
+  if(!t||!nameEl)return;
+  const inp=document.createElement('input');
+  inp.type='text'; inp.className='track-name-input'; inp.value=t.name;
+  nameEl.replaceWith(inp); inp.focus();
+  function commit(){
+    const v=inp.value.trim()||t.name; t.name=v; saveAudioTracks();
+    const sp=document.createElement('div'); sp.className='track-name'; sp.id='aname-'+id; sp.textContent=v;
+    inp.replaceWith(sp);
+  }
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();}});
+}
+
+function deleteTrack(id){
+  if(!confirm('Remove this track?'))return;
+  if(String(currentTrackId)===String(id)&&currentAudio){currentAudio.pause();currentAudio=null;currentTrackId=null;}
+  audioTracks=audioTracks.filter(t=>String(t.id)!==String(id));
+  saveAudioTracks(); renderAudioList();
+}
+
+// ─── SCRIPTS MANAGER ──────────────────
+let scripts=[];
+try{ scripts=JSON.parse(localStorage.getItem('adrianScripts')||'null'); }catch(e){}
+if(!scripts||!scripts.length){
+  scripts=[{id:'main',name:"Adrian's Daily Declaration (Main)",text:MAIN_SCRIPT,createdAt:new Date().toLocaleDateString()}];
+  try{localStorage.setItem('adrianScripts',JSON.stringify(scripts));}catch(e){}
+}
+
+function saveScripts(){try{localStorage.setItem('adrianScripts',JSON.stringify(scripts));}catch(e){}}
+
+function toggleAddForm(){
+  const f=document.getElementById('addScriptForm');
+  f.classList.toggle('open');
+  if(f.classList.contains('open')){
+    document.getElementById('newScriptName').value='';
+    document.getElementById('newScriptText').value='';
+    document.getElementById('newScriptName').focus();
+  }
+}
+
+function saveNewScript(){
+  const name=document.getElementById('newScriptName').value.trim();
+  const text=document.getElementById('newScriptText').value.trim();
+  if(!name){alert('Please enter a script name.');return;}
+  if(!text){alert('Please enter the script text.');return;}
+  scripts.push({id:'s'+Date.now(),name,text,createdAt:new Date().toLocaleDateString()});
+  saveScripts(); toggleAddForm(); renderScriptList();
+}
+
+function renderScriptList(){
+  const list=document.getElementById('scriptList');
+  const empty=document.getElementById('scriptsEmpty');
+  if(!scripts.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=scripts.map(s=>`
+    <div class="script-card" id="sc-${s.id}">
+      <div class="script-card-header" onclick="toggleScriptCard('${s.id}')">
+        <span class="script-expand-icon">▶</span>
+        <div class="script-card-title" id="sct-${s.id}">${esc(s.name)}</div>
+        <div class="script-card-actions" onclick="event.stopPropagation()">
+          <button class="btn sm" title="Rename" onclick="renameScript('${s.id}')">✎</button>
+          <button class="btn sm" title="Copy text" onclick="copyScriptById('${s.id}')">⎘ Copy</button>
+          ${s.id!=='main'?`<button class="btn sm danger" title="Delete" onclick="deleteScript('${s.id}')">✕</button>`:''}
+        </div>
+      </div>
+      <div class="script-card-body">
+        <div class="script-date">Created ${s.createdAt}</div>
+        <textarea class="script-textarea" id="sta-${s.id}">${esc(s.text)}</textarea>
+        <div class="script-card-footer">
+          <button class="btn sm primary" onclick="saveScriptEdit('${s.id}')">✦ Save Changes</button>
+          <button class="btn sm" onclick="copyScriptById('${s.id}')">⎘ Copy</button>
+          <span class="script-saved-msg" id="ssm-${s.id}">✓ Saved</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleScriptCard(id){ document.getElementById('sc-'+id).classList.toggle('open'); }
+
+function renameScript(id){
+  const s=scripts.find(x=>x.id===id); const titleEl=document.getElementById('sct-'+id);
+  if(!s||!titleEl)return;
+  const inp=document.createElement('input');
+  inp.className='script-title-input'; inp.value=s.name;
+  titleEl.innerHTML=''; titleEl.appendChild(inp); inp.focus();
+  function commit(){
+    const v=inp.value.trim()||s.name; s.name=v; saveScripts();
+    titleEl.textContent=v;
+  }
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();}});
+}
+
+function saveScriptEdit(id){
+  const ta=document.getElementById('sta-'+id);
+  const s=scripts.find(x=>x.id===id);
+  if(s&&ta){s.text=ta.value;saveScripts();}
+  const m=document.getElementById('ssm-'+id);
+  if(m){m.style.display='inline';setTimeout(()=>m.style.display='none',2000);}
+}
+
+function copyScriptById(id){
+  const s=scripts.find(x=>x.id===id);
+  const ta=document.getElementById('sta-'+id);
+  const text=ta?ta.value:(s?s.text:'');
+  if(text)navigator.clipboard.writeText(text).catch(()=>{});
+}
+
+function deleteScript(id){
+  if(!confirm('Delete this script? This cannot be undone.'))return;
+  scripts=scripts.filter(x=>x.id!==id); saveScripts(); renderScriptList();
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
