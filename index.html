@@ -306,21 +306,32 @@
     <div class="page-hero">
       <div class="hero-icon">🎵</div>
       <h2>Audio Library</h2>
-      <p>Upload your recorded declarations — click any track to play</p>
+      <p>Files from your GitHub repo load automatically below</p>
+    </div>
+
+    <!-- GitHub status bar -->
+    <div style="background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div id="githubStatus" style="font-family:'Inter',sans-serif;font-size:0.8rem;color:var(--muted);">🔄 Checking GitHub repo…</div>
+      <button class="btn sm" onclick="fetchGithubAudio()">↺ Refresh</button>
     </div>
 
     <div class="drop-zone" id="dropZone" onclick="document.getElementById('audioFileInput').click()">
       <div class="drop-icon">🎙</div>
-      <h3>Drop Audio Files Here</h3>
-      <p>or click to browse &nbsp;·&nbsp; supports MP3, M4A, WAV, OGG, AAC</p>
+      <h3>Upload a Local File</h3>
+      <p>Drag &amp; drop or click to browse &nbsp;·&nbsp; MP3, M4A, WAV, OGG, AAC<br>
+      <span style="color:rgba(201,168,76,0.5);font-size:0.72rem;">For permanent access on all devices, upload to GitHub instead</span></p>
       <input type="file" id="audioFileInput" multiple accept="audio/*" onchange="handleAudioFiles(this.files)">
     </div>
 
     <div id="audioList" class="audio-list"></div>
     <div id="audioEmpty" class="empty-state">
       <div class="e-icon">🎧</div>
-      <p>No audio tracks yet.<br>Upload your first recording above to get started.<br><br>
-      <strong style="color:var(--text)">Quick start:</strong> Record in Voice Memos or generate a voice at <strong style="color:var(--gold)">ElevenLabs.io</strong>,<br>then drag &amp; drop the file here. Play it every morning.</p>
+      <p>No audio files found yet.<br><br>
+      <strong style="color:var(--gold)">Best method — permanent on all devices:</strong><br>
+      Upload an MP3 or M4A to your GitHub repo, then click ↺ Refresh above.<br>
+      Files appear here automatically every time, on every device.<br><br>
+      <strong style="color:var(--text)">Just this device:</strong><br>
+      Drag &amp; drop a file into the box above.</p>
     </div>
   </div>
 </div>
@@ -446,12 +457,51 @@ navDotEls.forEach((dot,i)=>{
 });
 
 // ─── AUDIO LIBRARY ────────────────────
-let audioTracks = [];
-try { audioTracks = JSON.parse(localStorage.getItem('adrianAudioTracks')||'[]'); } catch(e){}
+// ⚙️  EDIT THESE TWO LINES WITH YOUR INFO:
+const GITHUB_USER = 'YOUR_GITHUB_USERNAME';   // e.g. 'adriansmith'
+const GITHUB_REPO = 'adrians-declaration';     // your repo name
+
+const AUDIO_EXTS = ['mp3','m4a','wav','ogg','aac','flac','opus','weba'];
+let githubTracks = [];   // loaded from GitHub API
+let localTracks  = [];   // uploaded manually via drag/drop
+try { localTracks = JSON.parse(localStorage.getItem('adrianLocalTracks')||'[]'); } catch(e){}
 
 let currentAudio=null, currentTrackId=null;
 
-// Drag & drop
+// ── Fetch audio files from GitHub repo automatically ──
+async function fetchGithubAudio(){
+  const statusEl = document.getElementById('githubStatus');
+  if(!GITHUB_USER || GITHUB_USER==='YOUR_GITHUB_USERNAME'){
+    statusEl.innerHTML = `<span style="color:var(--gold)">⚙️ Set your GitHub username in the code to auto-load files from your repo.</span>`;
+    return;
+  }
+  statusEl.innerHTML = `<span style="color:var(--muted)">🔄 Scanning your GitHub repo for audio files…</span>`;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/`);
+    if(!res.ok) throw new Error('Repo not found or private');
+    const files = await res.json();
+    githubTracks = files
+      .filter(f => AUDIO_EXTS.some(ext => f.name.toLowerCase().endsWith('.'+ext)))
+      .map(f => ({
+        id: 'gh_'+f.sha,
+        name: f.name.replace(/\.[^/.]+$/,''),
+        url: f.download_url,
+        size: f.size,
+        source: 'github',
+        addedAt: 'GitHub'
+      }));
+    if(githubTracks.length){
+      statusEl.innerHTML = `<span style="color:var(--gold)">✓ ${githubTracks.length} file${githubTracks.length>1?'s':''} found in your repo — auto-loaded below</span>`;
+    } else {
+      statusEl.innerHTML = `<span style="color:var(--muted)">No audio files found in repo yet. Upload an MP3/M4A to GitHub and refresh.</span>`;
+    }
+  } catch(err){
+    statusEl.innerHTML = `<span style="color:var(--muted)">Could not reach repo: ${err.message}</span>`;
+  }
+  renderAudioList();
+}
+
+// ── Drag & drop for local uploads ──
 const dz=document.getElementById('dropZone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
@@ -462,43 +512,52 @@ function handleAudioFiles(files){
     if(!file.type.startsWith('audio/'))return;
     const reader=new FileReader();
     reader.onload=e=>{
-      audioTracks.push({
-        id: Date.now()+Math.random(),
+      localTracks.push({
+        id: 'loc_'+Date.now()+Math.random(),
         name: file.name.replace(/\.[^/.]+$/,''),
         dataUrl: e.target.result,
-        type: file.type,
         size: file.size,
+        source: 'local',
         addedAt: new Date().toLocaleDateString()
       });
-      saveAudioTracks(); renderAudioList();
+      saveLocalTracks(); renderAudioList();
     };
     reader.readAsDataURL(file);
   });
 }
 
-function saveAudioTracks(){
-  try{ localStorage.setItem('adrianAudioTracks',JSON.stringify(audioTracks)); }catch(e){}
+function saveLocalTracks(){
+  try{ localStorage.setItem('adrianLocalTracks',JSON.stringify(localTracks)); }catch(e){
+    alert('File too large to store locally. Upload to GitHub instead for permanent access.');
+  }
 }
 
-function fmtBytes(b){ return b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB'; }
+function allTracks(){ return [...githubTracks, ...localTracks]; }
+function fmtBytes(b){ if(!b)return''; return b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB'; }
 function fmtTime(s){ if(isNaN(s))return'0:00'; return`${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`; }
 
 function renderAudioList(){
   const list=document.getElementById('audioList');
   const empty=document.getElementById('audioEmpty');
-  if(!audioTracks.length){list.innerHTML='';empty.style.display='block';return;}
+  const tracks = allTracks();
+  if(!tracks.length){list.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  list.innerHTML=audioTracks.map(t=>`
+  list.innerHTML=tracks.map(t=>`
     <div class="audio-track" id="atrack-${t.id}">
       <div class="track-top">
         <button class="track-play-btn" id="aplaybtn-${t.id}" onclick="togglePlay('${t.id}')">▶</button>
         <div class="track-info">
           <div class="track-name" id="aname-${t.id}">${esc(t.name)}</div>
-          <div class="track-meta">Added ${t.addedAt} &nbsp;·&nbsp; ${fmtBytes(t.size)}</div>
+          <div class="track-meta">
+            ${t.source==='github'
+              ? `<span style="color:var(--gold);font-size:0.65rem;letter-spacing:0.08em">⬡ GITHUB</span>`
+              : `<span style="color:var(--muted)">📱 Local · ${t.addedAt}</span>`}
+            ${t.size ? ` &nbsp;·&nbsp; ${fmtBytes(t.size)}` : ''}
+          </div>
         </div>
         <div class="track-actions">
           <button class="btn sm" onclick="renameTrack('${t.id}')">✎ Rename</button>
-          <button class="btn sm danger" onclick="deleteTrack('${t.id}')">✕ Remove</button>
+          ${t.source==='local'?`<button class="btn sm danger" onclick="deleteTrack('${t.id}')">✕</button>`:''}
         </div>
       </div>
       <input type="range" class="audio-progress" id="aseek-${t.id}" value="0" min="0" max="100" step="0.1" oninput="seekAudio('${t.id}',this.value)">
@@ -508,7 +567,7 @@ function renderAudioList(){
 }
 
 function togglePlay(id){
-  const track=audioTracks.find(t=>String(t.id)===String(id));
+  const track=allTracks().find(t=>String(t.id)===String(id));
   if(!track)return;
 
   if(currentAudio && String(currentTrackId)!==String(id)){
@@ -529,7 +588,9 @@ function togglePlay(id){
     return;
   }
 
-  const audio=new Audio(track.dataUrl);
+  // Use GitHub URL or local dataUrl
+  const src = track.source==='github' ? track.url : track.dataUrl;
+  const audio=new Audio(src);
   currentAudio=audio; currentTrackId=id;
 
   audio.addEventListener('loadedmetadata',()=>{
@@ -557,14 +618,16 @@ function seekAudio(id,val){
 }
 
 function renameTrack(id){
-  const t=audioTracks.find(x=>String(x.id)===String(id));
+  const t=allTracks().find(x=>String(x.id)===String(id));
   const nameEl=document.getElementById('aname-'+id);
   if(!t||!nameEl)return;
   const inp=document.createElement('input');
   inp.type='text'; inp.className='track-name-input'; inp.value=t.name;
   nameEl.replaceWith(inp); inp.focus();
   function commit(){
-    const v=inp.value.trim()||t.name; t.name=v; saveAudioTracks();
+    const v=inp.value.trim()||t.name; t.name=v;
+    if(t.source==='local') saveLocalTracks();
+    // GitHub tracks: name change is local-only (can't rename on GitHub from here)
     const sp=document.createElement('div'); sp.className='track-name'; sp.id='aname-'+id; sp.textContent=v;
     inp.replaceWith(sp);
   }
@@ -573,11 +636,14 @@ function renameTrack(id){
 }
 
 function deleteTrack(id){
-  if(!confirm('Remove this track?'))return;
+  if(!confirm('Remove this local track?'))return;
   if(String(currentTrackId)===String(id)&&currentAudio){currentAudio.pause();currentAudio=null;currentTrackId=null;}
-  audioTracks=audioTracks.filter(t=>String(t.id)!==String(id));
-  saveAudioTracks(); renderAudioList();
+  localTracks=localTracks.filter(t=>String(t.id)!==String(id));
+  saveLocalTracks(); renderAudioList();
 }
+
+// Auto-fetch GitHub audio on page load
+fetchGithubAudio();
 
 // ─── SCRIPTS MANAGER ──────────────────
 let scripts=[];
